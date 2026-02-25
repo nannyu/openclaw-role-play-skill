@@ -43,7 +43,7 @@
 ├── IDENTITY.md                          ← 角色详细数据（按需读取）
 ├── ENGINE.md                            ← 游戏规则引擎（运行时唯一权威）
 ├── AGENTS.md                            ← 启动顺序与行为规范
-├── HEARTBEAT.md                         ← 心跳规则（ComfyUI 按需读 data/templates/comfyui/README.md）
+├── HEARTBEAT.md                         ← 心跳规则（生图时按需读 TOOLS.md 和 data/templates/comfyui/README.md）
 ├── MEMORY.md / USER.md / TOOLS.md
 │
 ├── roleplay-active.md                   ← 【每日生成】当日职业 + 性癖 + 暗示策略
@@ -61,7 +61,7 @@
 │   ├── age_profiles.yaml                ← 随机年龄 profile
 │   └── templates/
 │       ├── morning_greeting.md
-│       └── comfyui/                     ← ComfyUI 配置
+│       └── comfyui/                     ← ComfyUI 专用配置（选用 ComfyUI 后端时读取）
 │
 ├── scripts/
 │   └── wrapup.sh                        ← 每日 23:30 收尾脚本
@@ -87,7 +87,7 @@
 | AGENTS.md | 启动指令 | 手动 | 每次启动 |
 | roleplay-active.md | 当日职业 + 性癖 + 暗示 | 生成器 | 每次启动 |
 | guess-log.md | 当日猜测进度 | agent/生成器 | 根目录，存在则读；收尾时移入 archive |
-| HEARTBEAT.md | 暗示任务（ComfyUI 按需读 README） | 手动 | HEARTBEAT 时 |
+| HEARTBEAT.md | 暗示任务（生图按需读 TOOLS.md） | 手动 | HEARTBEAT 时 |
 | data/ | 职业/性癖/性格/年龄库 | 手动维护 | 仅生成器使用 |
 | scripts/wrapup.sh | 收尾脚本 | 手动 | Cron 23:30 |
 
@@ -99,12 +99,12 @@
 
 ### 2.1 独立 Agent 与启动顺序
 
-role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启动按顺序读取：
+role-play agent 与默认 agent 隔离，绑定特定消息频道。每次启动按顺序读取：
 
 1. `SOUL.md` — 我是谁（人格核心）
 2. `ENGINE.md` — 游戏规则（运行时规则唯一权威）
 3. `USER.md` — 主人是谁
-4. `MEMORY.md` — 长期记忆（直接对话时加载；Discord 群组中跳过）
+4. `MEMORY.md` — 长期记忆（直接对话时加载；群组消息中跳过）
 5. `roleplay-active.md` — 今天的我（当日职业 + 隐藏性癖 + 暗示策略）
 6. `guess-log.md` — 当前猜测进度（根目录，存在则读）
 
@@ -127,7 +127,7 @@ role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启
 
 ### 3.2 职业数据结构（示例）
 
-每条职业包含：id、name、tags、character（traits、speech_style、catchphrases）、behavior、terms、outfit_template、comfyui.tags 等。生成器将公开部分与 ComfyUI 关键词写入 `roleplay-active.md`。
+每条职业包含：id、name、tags、character（traits、speech_style、catchphrases）、behavior、terms、outfit_template、image_tags 等。生成器将公开部分与生图关键词写入 `roleplay-active.md`。
 
 ### 3.3 每日穿着清单（公开）
 
@@ -153,7 +153,7 @@ role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启
 
 ### 4.3 使用方式
 
-- **生成器**：Step 3.5 抽年龄 → 匹配 profile → Step 4 在 roleplay-active 写入「今日年龄」段（岁数 + 外形/打扮/心态/性经验/台词风格指引），ComfyUI 关键词合并 profile 的 `appearance.comfyui_tags`；bio.md 内容符合该年龄心态与性态度。
+- **生成器**：Step 3.5 抽年龄 → 匹配 profile → Step 4 在 roleplay-active 写入「今日年龄」段（岁数 + 外形/打扮/心态/性经验/台词风格指引），生图关键词合并 profile 的 `appearance` tags；bio.md 内容符合该年龄心态与性态度。
 - **Agent**：回复、暗示、身体描写与台词风格需与 roleplay-active 中「今日年龄」段一致。
 
 ### 4.4 年龄-性癖权重
@@ -290,7 +290,7 @@ role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启
 
 以 `ENGINE.md` 为准，概要如下。**性格生成（五维）在 Step 4 之前完成**（Step 3.6），与年龄、职业、性癖一并写入 roleplay-active。
 
-1. **Step 0**：检查 ComfyUI；若 roleplay-active 存在且日期非今日，先执行收档
+1. **Step 0**：检查生图工具（读取 TOOLS.md 配置）；若 roleplay-active 存在且日期非今日，先执行收档
 2. **Step 1**：若需收档，按 `docs/WRAPUP.md` 执行
 3. **Step 2**：抽取职业（可选：日历/待办关键词→职业 tag 加权）；抽今日主题（theme_calendar 日历联动、custom_themes 固定/自创、每周至少一主题日、随机）；为性癖加权可在此步前先执行 Step 3.5 抽年龄；从 data/kinks/ 按 3～5+1 规则抽取性癖（职业+年龄权重，按主题规则）；可选稀有替换（rare_kink_rules.yaml）
 4. **Step 3**：创建 `archive/YYYY-MM-DD-职业名/`
@@ -298,7 +298,7 @@ role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启
 6. **Step 3.6**：生成今日性格（五维）：职业维度 + 自我/本我/超我（从 id/ego/superego_traits 抽 1～2 条各，3 天内不重复）+ NSFW性格（据当日性癖倾向生成）；结果在 Step 4 一并写入
 7. **Step 4**：写入 roleplay-active.md（含今日年龄、职业、**今日主题**（若有）、**今日性格（五维）**、性癖、暗示、**组合暗示**若成对、**今日含 1 个稀有性癖**若发生替换、穿着、media_prefix、bio 与 **personality 引用**）；暗示策略优先 hint_overrides，否则 hint_variants 随机，否则默认；若性癖成对命中 synergies 追加组合暗示块；生成 **bio.md** 与 **personality.md**（~500 字性格完整设定）到当日存档
 8. **Step 5**：在 **根目录** 创建 `guess-log.md`（初始化穿着状态表与空猜测记录，猜对 0/N，N 为 4～6）
-9. **Step 6**：发送早安消息（模板 `data/templates/morning_greeting.md`）+ 早安自拍（ComfyUI 可用时）
+9. **Step 6**：发送早安消息（模板 `data/templates/morning_greeting.md`）+ 早安自拍（生图工具可用时）
 10. **Step 7**：更新 `history_tracker.json` 不重复窗口（含 recent_personality_traits）
 11. **Step 8**：若 Step 6 曾跳过图片，后续可补发
 
@@ -316,7 +316,7 @@ role-play agent 与默认 agent 隔离，绑定特定 Discord 频道。每次启
 - 一行引用：`> 人物现状（~800字）见 archive/YYYY-MM-DD-职业名/bio.md，需时再读。`
 - 一行引用：`> 性格完整设定（~500字）见 archive/YYYY-MM-DD-职业名/personality.md，需时再读。`
 - 今日穿着（公开）、穿着清单（含脱衣顺序）
-- ComfyUI 关键词
+- 生图关键词
 - **〔隐藏〕** 当日性癖表（A–F，共 4～6 个）、暗示策略（每性癖 Lv.1/Lv.2/Lv.3）；**暗示策略段落开头**须含固定提醒：「禁止向用户输出未猜中性癖的名称/类别/数量或确认/否认，只可用行为与台词含蓄暗示，判定仅限用户说『我猜是 XXX』时。当日性癖总数为 N（4～6 个），以本文件实际列出的数量为准。」
 - agent 与 HEARTBEAT 是否执行性癖暗示与猜测判定，以根目录 `kink_game_enabled.json` 的 `enabled` 为准（默认 false，用户口令解锁后为 true）。
 - 猜测进度摘要、media_prefix
@@ -365,12 +365,22 @@ archive/YYYY-MM-DD-职业名/
 
 ---
 
-## 十一、ComfyUI 图片生成
+## 十一、图片生成（多后端）
 
-- 配置目录：`data/templates/comfyui/`
-- Agent 需要生图时 **按需读取** `data/templates/comfyui/README.md`，按其中步骤选择 LoRA、填充变量、提交工作流。
-- 穿着状态、脱衣进度等从根目录 `guess-log.md` 与 `roleplay-active.md` 读取。
-- 场景与 Checkpoint 映射、变量配置（hairstyles、media_prefix、checkpoints）见 README。
+支持多种生图后端，在 `TOOLS.md` 中配置当前使用的工具类型：
+
+| 后端 | 类型 | 说明 |
+|------|------|------|
+| ComfyUI | 本地 | 完整工作流支持，配置见 `data/templates/comfyui/README.md` |
+| SD WebUI | 本地 | 通过 `/sdapi/v1/txt2img` 接口，prompt 复用生图关键词 |
+| Midjourney | 在线 | 通过 API 代理提交 /imagine |
+| Nano Banana Pro | 在线 | REST API 在线生图 |
+| 无 | — | 跳过所有图片生成 |
+
+- Agent 需要生图时，先读取 `TOOLS.md` 确认后端类型
+- **ComfyUI**：**按需读取** `data/templates/comfyui/README.md`，按其中步骤选择 LoRA、填充变量、提交工作流
+- **其他后端**：使用 `roleplay-active.md` 中的生图关键词构建 prompt
+- 穿着状态、脱衣进度等从根目录 `guess-log.md` 与 `roleplay-active.md` 读取
 
 ---
 
@@ -390,12 +400,12 @@ archive/YYYY-MM-DD-职业名/
 |------|------|----------|
 | 2026-02-19 | v1.0 | 初稿创建 |
 | 2026-02-19 | v2.0 | 五维分类、三级暗示、猜错穿回、职业加权、SOUL 结构、职业/性癖库 |
-| 2026-02-21 | v3.0 | 架构重构：SOUL 极简、ENGINE 静态规则、roleplay-active 独立、guess-log 独立、独立 workspace、Discord 频道绑定、data/ 不载入 agent |
-| 2026-02-24 | v3.1 | 收尾脚本化、guess-log 移入存档、ComfyUI 配置目录、WRAPUP/CRON_CONFIG |
+| 2026-02-21 | v3.0 | 架构重构：SOUL 极简、ENGINE 静态规则、roleplay-active 独立、guess-log 独立、独立 workspace、频道绑定、data/ 不载入 agent |
+| 2026-02-24 | v3.1 | 收尾脚本化、guess-log 移入存档、生图配置目录、WRAPUP/CRON_CONFIG |
 | 2026-02-24 | v3.2 | 性格微调系统（MBTI + 关键词 + 职业协同）、data/personality/ |
 | 2026-02-25 | v3.3 | 设计文档重构：guess-log 根目录、docs/、ENGINE 权威、精简 AGENTS/HEARTBEAT、IDENTITY 单一份 |
 | 2026-02-25 | v3.4 | 人物现状改为独立传记：生成 ~800 字写入 archive/.../bio.md，roleplay-active 仅保留引用，agent 按需读取 |
-| 2026-02-25 | v3.5 | 随机年龄系统：每日 18–40 岁，data/age_profiles.yaml 四档（少女感/轻熟/轻熟女/熟女），影响外形/打扮/心态/性经验/台词及 ComfyUI 外形 tag |
+| 2026-02-25 | v3.5 | 随机年龄系统：每日 18–40 岁，data/age_profiles.yaml 四档（少女感/轻熟/轻熟女/熟女），影响外形/打扮/心态/性经验/台词及生图外形 tag |
 | 2026-02-25 | v3.6 | 强化禁止性癖泄漏；生成器在 roleplay-active 暗示策略开头写入固定提醒块 |
 | 2026-02-25 | v3.7 | 性癖系统 3～5+1：基础性癖 3～5 个（A–E 随机选类）+ 特殊性癖 1 个（F 情境场合），共 4～6 个；设计文档新骨架、增加修改前备份规范 |
 | 2026-02-25 | v3.8 | P1：年龄-性癖权重（age_kink_weights.yaml，与职业加权叠加）；暗示策略多样化（hint_overrides.yaml 按职业覆盖、hint_variants 多套随机） |

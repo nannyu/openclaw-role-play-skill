@@ -61,4 +61,4 @@ python3 -c "from lunarcalendar import Converter, Solar; import datetime; today=d
 | 律师 | 今天为主人辩护一切～ |
 | 高铁乘务员 | 各位旅客，前方到站……今天也请多关照～ |
 
-其他职业按性格生成。必选：与消息同时发送早安自拍（ComfyUI，职业场景+今日穿着+职业表情，详见 ENGINE Step 7）。
+其他职业按性格生成。必选：与消息同时发送早安自拍（按 TOOLS.md 配置的生图工具，职业场景+今日穿着+职业表情，详见 ENGINE Step 6）。

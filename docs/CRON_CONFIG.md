@@ -1,51 +1,67 @@
-# Cron 任务配置 — 角色扮演每日收尾
+# Cron 任务配置 — 角色扮演系统
 
-## 任务信息
+## 任务总览
 
-| 项目 | 值 |
-|------|-----|
-| **任务名称** | 角色扮演收尾 |
-| **执行时间** | 每日 23:30 |
-| **命令** | `/Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh` |
-| **目标 Agent** | role-play |
-| **输出** | `WRAPUP_OK`（成功时）|
+| 任务 | 时间 | 说明 |
+|------|------|------|
+| 每日角色生成 | 06:00 | 读取 ENGINE.md 执行 Step 0-8 |
+| 每日收尾归档 | 23:30 | 执行 WRAPUP.md 归档流程 |
 
-## 功能说明
+---
 
-脚本自动完成：
-1. 检查当日角色扮演是否有内容需要归档
-2. 复制 `roleplay-active.md` 到归档（原文件保留）
-3. 移动 `guess-log.md`、图片文件到归档目录
-4. 更新 `archive/history.md` 历史索引
+## OpenClaw Cron（推荐）
 
-## 配置方式
+### 每日 6:00 — 角色生成
 
-**方式一：系统 crontab**
 ```bash
-30 23 * * * /Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh >> /tmp/roleplay-wrapup.log 2>&1
+openclaw cron add \
+  --agent role-play \
+  --name "每日角色生成" \
+  --cron "0 6 * * *" \
+  --tz "Asia/Shanghai" \
+  --session isolated \
+  --message "读取 ENGINE.md 并按步骤执行每日初始化（Step 0-8）"
 ```
 
-**方式二：OpenClaw cron**
+### 每日 23:30 — 收尾归档
+
+```bash
+openclaw cron add \
+  --agent role-play \
+  --name "每日收尾归档" \
+  --cron "30 23 * * *" \
+  --tz "Asia/Shanghai" \
+  --session isolated \
+  --message "读取 docs/WRAPUP.md 按步骤执行收尾归档，完成后回复 WRAPUP_OK"
 ```
-执行时间: 23:30
-任务: 执行脚本 /Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh
-agent: role-play
+
+### 管理命令
+
+```bash
+openclaw cron list              # 查看所有任务
+openclaw cron run <job-id>      # 手动触发
+openclaw cron runs --id <id>    # 查看执行历史
+openclaw cron remove <job-id>   # 删除任务
 ```
+
+---
+
+## 系统 Crontab（备选）
+
+如不使用 OpenClaw cron，也可用系统 crontab 直接调用收尾脚本：
+
+```bash
+30 23 * * * <workspace-path>/scripts/wrapup.sh >> /tmp/roleplay-wrapup.log 2>&1
+```
+
+将 `<workspace-path>` 替换为实际 workspace 路径（如 `~/.openclaw/workspace-role-play`）。
+
+**注意**：系统 crontab 只能执行 shell 脚本（收尾归档），无法触发 agent 执行初始化。每日 6:00 初始化必须通过 OpenClaw cron 或心跳手动触发。
+
+---
 
 ## 前置条件
 
-- 脚本已可执行：`chmod +x /Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh`
+- 脚本已可执行：`chmod +x <workspace-path>/scripts/wrapup.sh`
 - 目录权限正常
-
-## 测试
-
-手动执行测试：
-```bash
-/Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh
-```
-
-预期输出：
-```
-[YYYY-MM-DD HH:MM:SS] ...
-WRAPUP_OK
-```
+- OpenClaw Gateway 运行中（使用 OpenClaw cron 时）

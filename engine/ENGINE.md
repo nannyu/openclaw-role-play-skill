@@ -8,11 +8,13 @@
 ## 每日初始化（6:00 自动执行）
 
 ### Step 0：前置检查（关键）
-- **检查 ComfyUI 服务**：
-  ```bash
-  curl -s http://localhost:8188/system_stats > /dev/null 2>&1 && echo "✅ ComfyUI 运行中" || echo "❌ ComfyUI 未启动"
-  ```
-  - 如果 ComfyUI 未启动，记录到日志，**跳过图片生成步骤（Step 6 的自拍部分）**
+- **检查生图工具**：
+  读取 `TOOLS.md` 的「生图工具配置」，判断当前后端类型：
+  - **ComfyUI**：`curl -s <接入地址>/system_stats > /dev/null 2>&1` 检测是否运行
+  - **SD WebUI**：`curl -s <接入地址>/sdapi/v1/sd-models > /dev/null 2>&1` 检测是否运行
+  - **Midjourney / Nano Banana Pro**（在线服务）：视为可用
+  - **未配置 / 无**：跳过所有图片生成
+  - 如果本地服务未启动，记录到日志，**跳过图片生成步骤（Step 6 的自拍部分）**
   - 继续执行其他所有步骤（不要因为图片生成失败而中断整个流程）
   
 - **清理昨日的残留状态**：
@@ -54,7 +56,7 @@
 ### Step 3.5：抽取今日年龄并应用年龄设定
 - 在 **18–40** 之间随机取整岁（含 18、40）
 - 读取 `data/age_profiles.yaml`，按年龄落入的区间匹配对应 **profile**（age_min ≤ 年龄 ≤ age_max），profile 的 **id**（youth / young_adult / mature / full_mature）用于查找 `data/weights/age_kink_weights.yaml` 的年龄加权
-- 该 profile 将影响：外形描述、打扮倾向、心态、性经验/性态度、语言台词风格；ComfyUI 外形 tag 在 Step 4 与职业 tag 合并使用
+- 该 profile 将影响：外形描述、打扮倾向、心态、性经验/性态度、语言台词风格；生图外形 tag 在 Step 4 与职业 tag 合并使用
 - 若在 Step 2 为性癖加权已提前执行本步，则此处沿用该年龄与 profile，不再重复抽取
 
 ### Step 3.6：生成今日性格（五维）
@@ -139,8 +141,8 @@ XX岁（profile_id 年龄段标签）
 ## 穿着清单
 （表格：编号、衣物、脱衣顺序）
 
-## ComfyUI 关键词
-（职业 tag + 年龄 profile appearance.comfyui_tags 合并）
+## 生图关键词
+（职业 tag + 年龄 profile appearance tags 合并，适用于所有生图后端）
 
 ---
 
@@ -198,7 +200,7 @@ media_prefix: XXX_
 
 ### Step 6：发送早安消息
 
-读取模板 `data/templates/morning_greeting.md`，填充变量后发送到 Discord（target: 1471537939967115548）
+读取模板 `data/templates/morning_greeting.md`，填充变量后发送到消息频道（target: `MEMORY.md` 中配置的频道）
 
 **模板变量填充规则**：
 
@@ -218,18 +220,22 @@ media_prefix: XXX_
 
 **必选：早安自拍**
 
-- **前置条件**：ComfyUI 服务必须运行（已在 Step 0 检查）
-- **如果 ComfyUI 可用**：
-  - 使用 `roleplay-active.md` 中的 ComfyUI 关键词生成图片
+- **前置条件**：生图工具可用（已在 Step 0 检查）
+- **如果生图工具可用**：
+  - 使用 `roleplay-active.md` 中的生图关键词生成图片
+  - **ComfyUI**：按 `data/templates/comfyui/README.md` 流程选 LoRA、填充变量、提交工作流
+  - **SD WebUI**：使用生图关键词构建 prompt，调用 txt2img API
+  - **Midjourney**：将关键词转为 MJ 格式 prompt，通过 API 提交
+  - **Nano Banana Pro**：使用关键词构建 prompt，调用 REST API
   - **要求**：
     - 贴合职业场景（如：护士站在护士站、兔女郎在赌场、巫女在神社）
     - 体现今日服装（完整穿着状态）
     - 表情符合职业性格（如：护士温柔、兔女郎俏皮、巫女清冷）
-  - 与早安消息一起发送到 Discord
-- **如果 ComfyUI 不可用**：
+  - 与早安消息一起发送到消息频道
+- **如果生图工具不可用**：
   - 跳过图片生成
   - 在早安消息中说明：「📷 今日自拍生成中，稍后补发」
-  - 记录到日志：`⚠️ ComfyUI 未启动，跳过自拍生成`
+  - 记录到日志：`⚠️ 生图工具不可用，跳过自拍生成`
   - **不要阻塞其他步骤的执行**
 
 ### Step 7：更新不重复窗口
@@ -256,7 +262,7 @@ media_prefix: XXX_
 ### Step 8：补充图片（如需要）
 - 若 Step 6 曾跳过图片生成，在空闲时补充：
   - 检查 `archive/YYYY-MM-DD-职业名/images/` 是否有图片
-  - 若为空且 ComfyUI 可用，生成自拍并发送到 Discord
+  - 若为空且生图工具可用，生成自拍并发送到消息频道
   - 消息：「📷 补发今日自拍」
 
 ---

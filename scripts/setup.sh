@@ -32,31 +32,35 @@ log "1. 创建目录结构..."
 mkdir -p "$TARGET"/{archive,memory,backups,scripts}
 mkdir -p "$TARGET"/data/{professions,kinks,themes,personality,weights,templates/comfyui}
 
-# 2. 交互式收集角色信息（供后续步骤注入）
+# 2. 收集角色信息（供后续步骤注入）
 CHAR_NAME=""
 CHAR_TZ=""
 EXTRA_LINES=""
 if [[ ! -f "$TARGET/IDENTITY.md" ]]; then
-    log "2. 角色身份设定..."
-    echo ""
-    echo "=== 角色身份设定 ==="
-    echo "（直接回车跳过，后续可手动编辑 IDENTITY.md）"
-    echo ""
+    if [[ -t 0 ]]; then
+        log "2. 角色身份设定..."
+        echo ""
+        echo "=== 角色身份设定 ==="
+        echo "（直接回车跳过，后续可手动编辑 IDENTITY.md）"
+        echo ""
 
-    read -rp "角色名称 (Name): " CHAR_NAME
-    read -rp "时区 (Timezone): " CHAR_TZ
+        read -rp "角色名称 (Name): " CHAR_NAME
+        read -rp "时区 (Timezone): " CHAR_TZ
 
-    echo ""
-    echo "如有其他需要设定的信息，请逐行输入，输入空行结束："
-    while true; do
-        read -rp "> " line
-        [[ -z "$line" ]] && break
-        EXTRA_LINES="${EXTRA_LINES}${line}\n"
-    done
-    echo ""
+        echo ""
+        echo "如有其他需要设定的信息，请逐行输入，输入空行结束："
+        while true; do
+            read -rp "> " line
+            [[ -z "$line" ]] && break
+            EXTRA_LINES="${EXTRA_LINES}${line}\n"
+        done
+        echo ""
+    else
+        log "2. [非交互模式] 跳过角色设定，部署后请手动编辑 IDENTITY.md"
+    fi
 else
     log "2. [跳过] IDENTITY.md 已存在，读取角色名..."
-    CHAR_NAME=$(grep -oP '(?<=\*\*Name:\*\* ).*' "$TARGET/IDENTITY.md" || true)
+    CHAR_NAME=$(sed -n 's/^- \*\*Name:\*\* \(.*\)/\1/p' "$TARGET/IDENTITY.md" | head -1)
 fi
 
 # 3. 复制引擎文件（不覆盖已存在的）
@@ -67,7 +71,11 @@ for f in ENGINE.md AGENTS.md HEARTBEAT.md SOUL.md; do
     else
         cp "$SKILL_ROOT/engine/$f" "$TARGET/$f"
         if [[ "$f" == "SOUL.md" && -n "$CHAR_NAME" ]]; then
-            sed -i '' "s/{{CHAR_NAME}}/$CHAR_NAME/g" "$TARGET/$f"
+            if [[ "$OSTYPE" == darwin* ]]; then
+                sed -i '' "s/{{CHAR_NAME}}/$CHAR_NAME/g" "$TARGET/$f"
+            else
+                sed -i "s/{{CHAR_NAME}}/$CHAR_NAME/g" "$TARGET/$f"
+            fi
         fi
         log "  [新建] $f"
     fi

@@ -32,7 +32,8 @@
 ## Cron 配置
 
 - **执行时间**：每日 23:30
-- **命令**：`/Users/nn/.openclaw/workspace-role-play/scripts/wrapup.sh`
+- **命令**：`<workspace-path>/scripts/wrapup.sh`
+- 详细配置见 `docs/CRON_CONFIG.md`
 
 ---
 

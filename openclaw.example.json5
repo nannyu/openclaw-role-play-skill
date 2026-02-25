@@ -1,0 +1,72 @@
+// openclaw.example.json5 — 角色扮演系统 OpenClaw 配置参考
+// 将以下内容合并到 ~/.openclaw/openclaw.json 中
+// 完整部署指南见 docs/OPENCLAW_SETUP.md
+{
+  agents: {
+    list: [
+      // ... 你的其他 agent ...
+      {
+        id: "role-play",
+        name: "角色扮演",
+        // setup.sh 部署的目标路径
+        workspace: "~/.openclaw/workspace-role-play",
+        model: {
+          primary: "anthropic/claude-sonnet-4-5",
+        },
+        heartbeat: {
+          every: "30m",
+          // "last" = 发到最近活跃的会话；也可填具体频道标识
+          target: "last",
+          // 限制心跳的活跃时段（角色扮演 6:00-24:00）
+          activeHours: { start: "06:00", end: "23:59" },
+        },
+      },
+    ],
+  },
+
+  // Skill 配置（可选，仅当通过 clawhub 或 skills/ 目录安装时需要）
+  skills: {
+    entries: {
+      "daily-roleplay-game": {
+        enabled: true,
+      },
+    },
+  },
+}
+
+// ─── 频道绑定（可选，按使用的平台配置） ───
+//
+// Discord:
+//   channels: { discord: { enabled: true, groupPolicy: { routes: [
+//     { match: { channelId: "频道ID" }, agent: "role-play" }
+//   ] } } }
+//
+// Telegram:
+//   channels: { telegram: { enabled: true, groupPolicy: { routes: [
+//     { match: { chatId: "群组ID" }, agent: "role-play" }
+//   ] } } }
+//
+// 飞书:
+//   channels: { feishu: { enabled: true, groupPolicy: { routes: [
+//     { match: { chatId: "群组ID" }, agent: "role-play" }
+//   ] } } }
+
+// ─── Cron 任务（通过 CLI 添加，不写在 json 中） ───
+//
+// 1) 每日 6:00 初始化（isolated session，agent 读取 ENGINE.md 执行 Step 0-8）
+//    openclaw cron add \
+//      --agent role-play \
+//      --name "每日角色生成" \
+//      --cron "0 6 * * *" \
+//      --tz "Asia/Shanghai" \
+//      --session isolated \
+//      --message "读取 ENGINE.md 并按步骤执行每日初始化（Step 0-8）"
+//
+// 2) 每日 23:30 收尾归档（isolated session，执行 wrapup）
+//    openclaw cron add \
+//      --agent role-play \
+//      --name "每日收尾归档" \
+//      --cron "30 23 * * *" \
+//      --tz "Asia/Shanghai" \
+//      --session isolated \
+//      --message "读取 docs/WRAPUP.md 按步骤执行收尾归档，完成后回复 WRAPUP_OK"

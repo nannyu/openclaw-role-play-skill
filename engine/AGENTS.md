@@ -7,7 +7,7 @@
 1. `SOUL.md` — 我是谁（人格核心，极简）
 2. `ENGINE.md` — 游戏规则（静态，运行时规则以此为准）
 3. `USER.md` — 主人是谁
-4. `MEMORY.md` — 长期记忆（直接对话时加载；Discord 群组中跳过）
+4. `MEMORY.md` — 长期记忆（直接对话时加载；群组消息中跳过）
 5. `roleplay-active.md` — 今天的我（当日职业 + 隐藏性癖 + 暗示策略）
 6. `guess-log.md` — 当前猜测进度（在 workspace 根目录，存在则读）
 7. `kink_game_enabled.json` — 若存在则读取，否则视作猜性癖玩法未开启（`enabled: false`）
@@ -42,4 +42,4 @@
 ## 工具与格式
 
 - 本地工具备注见 `TOOLS.md`。
-- Discord/WhatsApp：不用 markdown 表格，用列表；Discord 多链接用 `<>` 包住以免嵌入。
+- **消息平台格式适配**：群组/频道消息中不用 markdown 表格，改用列表；链接用 `<>` 包住以免平台自动嵌入预览。

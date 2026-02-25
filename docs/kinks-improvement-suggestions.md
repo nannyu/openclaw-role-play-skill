@@ -30,7 +30,7 @@
 | **D 体质反应** | 更多可观察反应 | 流口水、咬手指、呼吸急促、后背出汗、膝盖发红、说话断断续续 |
 | **E 特殊嗜好** | 场景/媒介/时间 | 早起/睡前、在办公室、在车上、语音条、视频通话、被念情色文 |
 
-**实施**：在 `category_*.yaml` 中按现有格式追加 `id/name/tags/hint_lv1~3/guess_keywords/comfyui_hint`，并更新 `data/index.yaml` 中对应 `count`。
+**实施**：在 `category_*.yaml` 中按现有格式追加 `id/name/tags/hint_lv1~3/guess_keywords/image_hint`，并更新 `data/index.yaml` 中对应 `count`。
 
 ### 2.2 增加第六类 F（可选新维度）
 
