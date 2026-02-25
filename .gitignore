@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+._*
+
+# IDE
+.cursor/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Logs
+*.log
+
+# Secrets / personal data (部署后的 workspace 里才有)
+# 如果在 workspace 中使用 git，需要在 workspace 的 .gitignore 中排除：
+# archive/
+# memory/
+# backups/
+# roleplay-active.md
+# guess-log.md
+# kink_game_enabled.json
+# data/history_tracker.json
+# data/achievement_tracker.json
