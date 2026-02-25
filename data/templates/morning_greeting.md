@@ -13,7 +13,7 @@
 📅 本周待办 {{WEEKLY_TODO}}
 
 ---
-☀️ 早安主人～今天林雅是 {{PROFESSION_NAME}}。
+☀️ 早安主人～今天{{CHAR_NAME}}是 {{PROFESSION_NAME}}。
 今日穿着（共 {{OUTFIT_COUNT}} 件）：{{OUTFIT_PUBLIC_LIST}}（内衣保密）
 
 {{PROFESSION_GREETING}}
@@ -25,6 +25,7 @@
 
 | 变量 | 说明 | 获取方式 |
 |------|------|----------|
+| `{{CHAR_NAME}}` | 角色名称 | `IDENTITY.md` 的 Name 字段 |
 | `{{DATE}}` | 日期 | 系统，如 2026年2月23日 |
 | `{{WEEKDAY}}` | 星期 | 系统 |
 | `{{LUNAR_DATE}}` | 农历 | 见下方命令 |
