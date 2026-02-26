@@ -1,16 +1,32 @@
 # OpenClaw 部署指南
 
-本系统需要作为**独立 agent** 部署（不替换默认 agent），拥有独立 workspace、心跳和定时任务。
+本系统作为**独立 agent** 部署（不替换默认 agent），拥有独立 workspace、心跳和定时任务。`setup.sh` 会自动创建 `role-play` agent 和 workspace，不影响现有配置。
 
 ---
 
-## 1. 创建独立 Agent
+## 1. 安装并部署
+
+### 方式 A：ClawHub（推荐）
 
 ```bash
-openclaw agents add role-play
+clawhub install daily-roleplay-game
+./skills/daily-roleplay-game/scripts/setup.sh
 ```
 
-这会在 `~/.openclaw/agents/role-play/` 下创建 agent 目录。
+### 方式 B：Git Clone
+
+```bash
+git clone https://github.com/nannyu/openclaw-role-play-skill.git
+cd openclaw-role-play-skill
+./scripts/setup.sh
+```
+
+`setup.sh` 会自动：
+- 检测 `openclaw` CLI，如可用则创建 `role-play` agent
+- 在 `~/.openclaw/workspace-role-play/` 部署引擎文件和数据
+- 引导角色设定（交互模式）或留空（非交互模式）
+
+> 也可指定自定义 workspace 路径：`./scripts/setup.sh /path/to/workspace`
 
 ## 2. 配置 openclaw.json
 
@@ -42,23 +58,14 @@ openclaw agents add role-play
 
 | 字段 | 说明 |
 |------|------|
-| `workspace` | setup.sh 的部署目标路径，需与下一步一致 |
+| `workspace` | 需与 setup.sh 的部署路径一致（默认 `~/.openclaw/workspace-role-play`） |
 | `agents.defaults.heartbeat` | 全局心跳配置，30 分钟间隔用于三级暗示系统 |
 | `heartbeat.activeHours` | 限制心跳在 6:00-24:00 活跃（角色扮演时段） |
 | `model` | 字符串格式，可按需更换模型 |
 
 > **注意**：`heartbeat` 为全局配置，放在 `agents.defaults` 下，会影响所有 agent。若只需 role-play agent 使用心跳，可将 role-play 设为默认 agent，或在其他 agent 的 `HEARTBEAT.md` 中写 `HEARTBEAT_OK` 来跳过。
 
-## 3. 部署文件到 Workspace
-
-```bash
-cd /path/to/openclaw-role-play-skill
-./scripts/setup.sh ~/.openclaw/workspace-role-play
-```
-
-非交互环境下脚本会自动跳过角色设定输入，部署后手动编辑配置文件。
-
-## 4. 编辑必填配置
+## 3. 编辑必填配置
 
 部署后必须编辑以下文件：
 
@@ -91,7 +98,7 @@ ENGINE.md 和 HEARTBEAT.md 中的消息发送会读取此处的频道配置。
 
 配置生图后端（ComfyUI / SD WebUI / Midjourney / Nano Banana Pro），填写工具类型和接入地址。不使用生图功能可填「无」。
 
-## 5. 配置定时任务
+## 4. 配置定时任务
 
 ### 每日 6:00 — 自动初始化
 
@@ -131,7 +138,7 @@ openclaw cron add \
 openclaw cron list
 ```
 
-## 6. 频道绑定（可选）
+## 5. 频道绑定（可选）
 
 如需将 agent 绑定到特定消息频道，在 `openclaw.json` 中使用顶层 `bindings` 数组配置消息路由，并在 `channels` 中配置账号信息。详见 [OpenClaw 多 Agent 文档](https://docs.openclaw.ai/concepts/multi-agent)。
 
@@ -190,10 +197,10 @@ openclaw cron list
 
 > **说明**：`bindings` 中的 `match.channel` 值对应平台名称（discord / telegram / feishu / whatsapp / slack），`accountId` 对应 `channels` 中配置的账号 key。
 
-## 7. 首次运行检查清单
+## 6. 首次运行检查清单
 
-- [ ] `openclaw.json` 中已添加 role-play agent 配置
-- [ ] `~/.openclaw/workspace-role-play/` 目录已由 setup.sh 创建
+- [ ] `setup.sh` 已执行成功（自动创建 agent + workspace）
+- [ ] `openclaw.json` 中已添加 role-play agent 配置（心跳、model 等）
 - [ ] `MEMORY.md` 已填入消息频道标识
 - [ ] `IDENTITY.md` 已填入角色名称和时区
 - [ ] `USER.md` 已填写主人信息
@@ -201,7 +208,7 @@ openclaw cron list
 - [ ] cron 任务已添加（`openclaw cron list` 可见）
 - [ ] 心跳已生效（agent 每 30 分钟自动执行 HEARTBEAT.md）
 
-## 8. 测试
+## 7. 测试
 
 手动触发一次初始化：
 

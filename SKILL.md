@@ -1,31 +1,63 @@
 ---
 name: daily-roleplay-game
 description: Daily profession roleplay game engine with hidden kink guessing, AI-driven personality generation, achievement tracking, and multi-backend image generation (ComfyUI/SD WebUI/Midjourney/Nano Banana Pro). Use when setting up or running the daily roleplay system, generating daily characters, managing guess-log, or handling roleplay archives.
+metadata: {"openclaw":{"emoji":"🎭","homepage":"https://github.com/nannyu/openclaw-role-play-skill"}}
 ---
 
 # Daily Profession Roleplay Game
 
 AI 驱动的每日职业角色扮演系统。每天自动抽取职业、年龄、性格（五维）、隐藏性癖（4~6 个），通过三级暗示系统引导猜测，支持多种生图后端（ComfyUI / SD WebUI / Midjourney / Nano Banana Pro）。
 
-## Quick Setup
+## 安装
 
-运行一键部署脚本将系统安装到指定 workspace：
+### 方式 1：ClawHub（推荐）
 
 ```bash
-./scripts/setup.sh /path/to/target-workspace
+clawhub install daily-roleplay-game
 ```
 
-脚本会：
-1. 复制引擎文件（ENGINE.md, AGENTS.md, HEARTBEAT.md, SOUL.md）
-2. 复制数据目录（professions, kinks, themes, personality, weights, templates）
-3. 从模板初始化运行时文件（history_tracker.json, achievement_tracker.json 等）
-4. 创建 archive/ 和 memory/ 目录
-5. 设置脚本可执行权限
+安装后运行部署脚本（自动创建独立的 `role-play` agent，不影响现有 agent）：
+
+```bash
+./skills/daily-roleplay-game/scripts/setup.sh
+```
+
+### 方式 2：Git Clone
+
+```bash
+git clone https://github.com/nannyu/openclaw-role-play-skill.git
+cd openclaw-role-play-skill
+./scripts/setup.sh
+```
+
+脚本会自动：
+1. 创建 `role-play` agent（如 openclaw CLI 可用）
+2. 部署引擎文件（ENGINE.md, AGENTS.md, HEARTBEAT.md, SOUL.md）到 `~/.openclaw/workspace-role-play/`
+3. 复制数据目录（professions, kinks, themes, personality, weights, templates）
+4. 从模板初始化运行时文件（MEMORY.md, USER.md, TOOLS.md, IDENTITY.md 等）
+5. 创建 archive/ 和 scripts/ 目录
+
+> 也可指定自定义 workspace 路径：`./scripts/setup.sh /path/to/workspace`
+
+## 部署后配置
+
+```bash
+cd ~/.openclaw/workspace-role-play
+```
+
+1. **IDENTITY.md** — 填写角色名称和时区
+2. **USER.md** — 填写你的个人信息
+3. **MEMORY.md** — 配置消息频道（discord/telegram/feishu/last）
+4. **TOOLS.md** — 配置生图工具（ComfyUI/SD WebUI/Midjourney/Nano Banana Pro，不需要可填「无」）
+5. **openclaw.json** — 将 `openclaw.example.json5` 的配置合并进去（心跳、频道绑定等）
+6. **定时任务** — 添加 6:00 初始化 + 23:30 收尾归档（见 docs/CRON_CONFIG.md）
+
+完整部署指南见 [docs/OPENCLAW_SETUP.md](docs/OPENCLAW_SETUP.md)。
 
 ## System Architecture
 
 ```
-target-workspace/
+~/.openclaw/workspace-role-play/
 ├── SOUL.md / ENGINE.md / AGENTS.md / HEARTBEAT.md  ← 核心（静态）
 ├── USER.md / MEMORY.md / TOOLS.md / IDENTITY.md    ← 用户信息（手动维护）
 ├── roleplay-active.md      ← 每日生成（YAML front-matter + 强制模板）
@@ -88,14 +120,6 @@ target-workspace/
 - **添加性癖**：在 `data/kinks/category_*.yaml` 中追加，更新 `data/index.yaml` count
 - **添加主题日**：编辑 `data/themes/daily_themes.yaml`
 - **生图工具配置**：编辑 `templates/TOOLS.md`（ComfyUI 详细配置见 `data/templates/comfyui/README.md`）
-
-## OpenClaw Deployment
-
-本系统需要作为独立 agent 部署，配置心跳（30 分钟）和定时任务（6:00 + 23:30）。
-
-- **配置参考**：[openclaw.example.json5](openclaw.example.json5)
-- **完整部署指南**：[docs/OPENCLAW_SETUP.md](docs/OPENCLAW_SETUP.md)
-- **Cron 配置**：[docs/CRON_CONFIG.md](docs/CRON_CONFIG.md)
 
 ## Design Documents
 
