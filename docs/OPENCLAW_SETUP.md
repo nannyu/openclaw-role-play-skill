@@ -19,19 +19,19 @@ openclaw agents add role-play
 ```json5
 {
   agents: {
+    defaults: {
+      heartbeat: {
+        every: "30m",
+        target: "last",
+        activeHours: { start: "06:00", end: "23:59" },
+      },
+    },
     list: [
       {
         id: "role-play",
         name: "角色扮演",
         workspace: "~/.openclaw/workspace-role-play",
-        model: {
-          primary: "anthropic/claude-sonnet-4-5",
-        },
-        heartbeat: {
-          every: "30m",
-          target: "last",
-          activeHours: { start: "06:00", end: "23:59" },
-        },
+        model: "anthropic/claude-sonnet-4-5",
       },
     ],
   },
@@ -43,9 +43,11 @@ openclaw agents add role-play
 | 字段 | 说明 |
 |------|------|
 | `workspace` | setup.sh 的部署目标路径，需与下一步一致 |
-| `heartbeat.every` | 30 分钟心跳，用于三级暗示系统 |
+| `agents.defaults.heartbeat` | 全局心跳配置，30 分钟间隔用于三级暗示系统 |
 | `heartbeat.activeHours` | 限制心跳在 6:00-24:00 活跃（角色扮演时段） |
-| `model.primary` | 可按需更换模型 |
+| `model` | 字符串格式，可按需更换模型 |
+
+> **注意**：`heartbeat` 为全局配置，放在 `agents.defaults` 下，会影响所有 agent。若只需 role-play agent 使用心跳，可将 role-play 设为默认 agent，或在其他 agent 的 `HEARTBEAT.md` 中写 `HEARTBEAT_OK` 来跳过。
 
 ## 3. 部署文件到 Workspace
 
@@ -100,8 +102,13 @@ openclaw cron add \
   --cron "0 6 * * *" \
   --tz "Asia/Shanghai" \
   --session isolated \
+  --delivery none \
+  --model opus \
   --message "读取 ENGINE.md 并按步骤执行每日初始化（Step 0-8）"
 ```
+
+> `--delivery none`：agent 在执行过程中已通过 message tool 发送早安消息，无需 cron 再发摘要。
+> `--model opus`：初始化流程涉及多步推理和内容生成，建议使用高能力模型。
 
 ### 每日 23:30 — 自动收尾归档
 
@@ -112,8 +119,11 @@ openclaw cron add \
   --cron "30 23 * * *" \
   --tz "Asia/Shanghai" \
   --session isolated \
+  --delivery none \
   --message "读取 docs/WRAPUP.md 按步骤执行收尾归档，完成后回复 WRAPUP_OK"
 ```
+
+> `--delivery none`：收尾归档为内部操作，无需发送执行摘要。
 
 ### 验证任务
 
@@ -123,19 +133,27 @@ openclaw cron list
 
 ## 6. 频道绑定（可选）
 
-如需将 agent 绑定到特定消息频道，在 `openclaw.json` 中配置 channel routing。以下为各平台示例：
+如需将 agent 绑定到特定消息频道，在 `openclaw.json` 中使用顶层 `bindings` 数组配置消息路由，并在 `channels` 中配置账号信息。详见 [OpenClaw 多 Agent 文档](https://docs.openclaw.ai/concepts/multi-agent)。
 
 ### Discord
 
 ```json5
 {
+  bindings: [
+    { agentId: "role-play", match: { channel: "discord", accountId: "default" } },
+  ],
   channels: {
     discord: {
-      enabled: true,
-      groupPolicy: {
-        routes: [
-          { match: { channelId: "你的频道ID" }, agent: "role-play" },
-        ],
+      groupPolicy: "allowlist",
+      accounts: {
+        default: {
+          token: "DISCORD_BOT_TOKEN",
+          guilds: {
+            "GUILD_ID": {
+              channels: { "CHANNEL_ID": { allow: true, requireMention: false } },
+            },
+          },
+        },
       },
     },
   },
@@ -146,35 +164,31 @@ openclaw cron list
 
 ```json5
 {
+  bindings: [
+    { agentId: "role-play", match: { channel: "telegram", accountId: "default" } },
+  ],
   channels: {
     telegram: {
-      enabled: true,
-      groupPolicy: {
-        routes: [
-          { match: { chatId: "你的群组ID" }, agent: "role-play" },
-        ],
+      accounts: {
+        default: { botToken: "TELEGRAM_BOT_TOKEN", dmPolicy: "pairing" },
       },
     },
   },
 }
 ```
 
-### 飞书
+### 飞书 / 其他平台
 
 ```json5
 {
-  channels: {
-    feishu: {
-      enabled: true,
-      groupPolicy: {
-        routes: [
-          { match: { chatId: "你的群组ID" }, agent: "role-play" },
-        ],
-      },
-    },
-  },
+  bindings: [
+    { agentId: "role-play", match: { channel: "feishu", accountId: "default" } },
+  ],
+  // channels.feishu 配置按 OpenClaw 官方文档填写
 }
 ```
+
+> **说明**：`bindings` 中的 `match.channel` 值对应平台名称（discord / telegram / feishu / whatsapp / slack），`accountId` 对应 `channels` 中配置的账号 key。
 
 ## 7. 首次运行检查清单
 

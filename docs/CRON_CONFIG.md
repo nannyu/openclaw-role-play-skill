@@ -20,8 +20,13 @@ openclaw cron add \
   --cron "0 6 * * *" \
   --tz "Asia/Shanghai" \
   --session isolated \
+  --delivery none \
+  --model opus \
   --message "读取 ENGINE.md 并按步骤执行每日初始化（Step 0-8）"
 ```
+
+> `--delivery none`：agent 自行通过 message tool 发送早安消息，无需 cron 发摘要。
+> `--model opus`：初始化逻辑复杂（多步推理 + 内容生成），建议使用高能力模型。
 
 ### 每日 23:30 — 收尾归档
 
@@ -32,8 +37,11 @@ openclaw cron add \
   --cron "30 23 * * *" \
   --tz "Asia/Shanghai" \
   --session isolated \
+  --delivery none \
   --message "读取 docs/WRAPUP.md 按步骤执行收尾归档，完成后回复 WRAPUP_OK"
 ```
+
+> `--delivery none`：收尾归档为内部操作，无需发送执行摘要。
 
 ### 管理命令
 
